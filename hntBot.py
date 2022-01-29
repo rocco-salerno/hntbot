@@ -8,7 +8,7 @@ from discord_webhook import DiscordWebhook
 helium_api_endpoint = "https://api.helium.io/v1/"
 helium_explorer_tx = "https://explorer.helium.com/txns/"
 config_file = r"E:\Rocco\Documents\HNT Bot\config.json"
-discordWebhook = "https://discord.com/api/webhooks/936333349197316188/bb-1zuXa3p5cyImLKE8S1d8U0Cx36sdvv89smb2KcY_qcK67_Qf2h1MG3Ad61WAwclYK"
+discordWebhook = "discord webhook here"
 # Generate a UUID from a host ID, sequence number, and the current time
 headers = {'User-Agent': str(uuid.uuid1())}
 
