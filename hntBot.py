@@ -7,7 +7,7 @@ from discord_webhook import DiscordWebhook
 
 helium_api_endpoint = "https://api.helium.io/v1/"
 helium_explorer_tx = "https://explorer.helium.com/txns/"
-config_file = r"E:\Rocco\Documents\HNT Bot\config.json"
+config_file = r".\config.json"
 discordWebhook = "discord webhook here"
 # Generate a UUID from a host ID, sequence number, and the current time
 headers = {'User-Agent': str(uuid.uuid1())}
@@ -25,7 +25,7 @@ async def add(ctx, args):
         await ctx.send("This Hotspot address does not exist. Hotspot was NOT added.")
     #await ctx.send(args)
 
-bot.run("TOKEN_HERE")
+#bot.run("TOKEN_HERE")
 
 #*******************************************************************************************
 #   Functions
@@ -44,12 +44,28 @@ def sendDiscordMessage():
     webhook = DiscordWebhook(url="https://discord.com/api/webhooks/936333349197316188/bb-1zuXa3p5cyImLKE8S1d8U0Cx36sdvv89smb2KcY_qcK67_Qf2h1MG3Ad61WAwclYK", content=messageContent)
     # send
     webhook_response = webhook.execute()
+
+def addHeliumAddress(address):
+    print("Entered")
+    #Confirm address is alpha numeric
+    #Concatenate address to json format
+    jsonStr = '{"hotspot": ' + address + ', "discord_webhook": "DISCORD WEBHOOK", "name": ""}'
+    # Append-adds to the end of the config file
+    file1 = open("config.json", "a")  # append mode
+    file1.write(jsonStr)
+    print("Wrote to config")
+    file1.close()
+
+    return True
+
 #____________________________________________________________________________________________________________________________________________________
 
 #--------------------------------------------------------------------------------------------
 # Zees is ze main function
 #--------------------------------------------------------------------------------------------
 global activities, config, hs, wellness_check, send, send_report, send_wellness_check
+#TODO make this dynamic 
+addHeliumAddress('"11PNjHCMvASVN7oSNF2V6XM1QgfvpGx1AxkWF1VYoCC6s6ngxw5"')
 with open(config_file) as json_data_file:
         for jsonObj in json_data_file:
             #getting the next hotspot name to process
@@ -79,7 +95,6 @@ with open(config_file) as json_data_file:
                 "block": hotspot_data["block"],
                 "reward_scale": "{:.2f}".format(round(hotspot_data["reward_scale"], 2)),
             }
-            
+
             #sendDiscordMessage()
             print(hs_add)
-
