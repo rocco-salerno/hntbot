@@ -25,7 +25,7 @@ async def add(ctx, args):
         await ctx.send("This Hotspot address does not exist. Hotspot was NOT added.")
     #await ctx.send(args)
 
-bot.run("OTM2MzI4MTY0NzY5MTQwODM2.YfLljg.LJb_6kE0_hfz8QDw_mWt3t7XOYo")
+bot.run("TOKEN_HERE")
 
 #*******************************************************************************************
 #   Functions
