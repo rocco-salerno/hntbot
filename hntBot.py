@@ -8,7 +8,9 @@ from discord_webhook import DiscordWebhook
 helium_api_endpoint = "https://api.helium.io/v1/"
 helium_explorer_tx = "https://explorer.helium.com/txns/"
 config_file = r".\config.json"
-discordWebhook = "discord webhook here"
+webhook_file = ".\webhook.json"
+webhook = ""
+token = ""
 # Generate a UUID from a host ID, sequence number, and the current time
 headers = {'User-Agent': str(uuid.uuid1())}
 
@@ -19,10 +21,18 @@ global activities, config, hs, wellness_check, send, send_report, send_wellness_
 #   Functions
 #*******************************************************************************************
 def getWebhook():
-    with open("webhook.txt") as f:
-        webhook = f.read().strip()
-        print("Read the webhook")
-        return webhook
+    openJson = open(webhook_file)
+    data = json.load(openJson)
+    webhook = data["webhook"]
+    print ("The webhook is: " + webhook)
+    return webhook
+
+def getToken():
+    openJson = open(webhook_file)
+    data = json.load(openJson)
+    token = data["token"]
+    print("The token is: " + token)
+    return token
 
 def nice_hotspot_name(name):
     return name.replace("-", " ").upper()
@@ -35,7 +45,6 @@ def nice_hotspot_initials(name):
 
 def sendDiscordMessage():
     messageContent = "This is just a test!"
-
     webhook = getWebhook()
     # send
     webhook_response = webhook.execute()
@@ -62,7 +71,8 @@ def addHeliumAddress(address):
 #--------------------------------------------------------------------------------------------
 # Zees is ze main functeen
 #--------------------------------------------------------------------------------------------
-"""with open(config_file) as json_data_file:
+def getAllHotspots():
+    with open(config_file) as json_data_file:
         for jsonObj in json_data_file:
             #getting the next hotspot name to process
             config = json.loads(jsonObj)
@@ -91,7 +101,6 @@ def addHeliumAddress(address):
                 "block": hotspot_data["block"],
                 "reward_scale": "{:.2f}".format(round(hotspot_data["reward_scale"], 2)),
             }
-"""
             #sendDiscordMessage()
             #print(hs_add)
 
@@ -111,4 +120,4 @@ async def add(ctx, args):
         addHeliumAddress(args)
         await ctx.send("Your hotspot has been added. You can use the $status command to see your hotspot's status.")
 
-bot.run("OTM2MzI4MTY0NzY5MTQwODM2.YfLljg.t4MBqh9X8iGV2ohS4oVJPgiuRjA")
+bot.run(str(getToken()))
