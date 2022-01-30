@@ -4,7 +4,7 @@ import uuid
 import discord
 from discord.ext import commands
 from discord_webhook import DiscordWebhook
-
+#test
 helium_api_endpoint = "https://api.helium.io/v1/"
 helium_explorer_tx = "https://explorer.helium.com/txns/"
 config_file = r".\config.json"
