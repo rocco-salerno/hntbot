@@ -13,19 +13,7 @@ discordWebhook = "discord webhook here"
 headers = {'User-Agent': str(uuid.uuid1())}
 
 bot = commands.Bot(command_prefix="$")
-
-@bot.command()
-async def hello(ctx):
-    await ctx.send('Hello!')
-
-@bot.command()
-async def add(ctx, args):
-    #add the helium hotspot miner address to config file
-    if str(requests.get(helium_api_endpoint + "badapicall", headers=headers)):
-        await ctx.send("This Hotspot address does not exist. Hotspot was NOT added.")
-    #await ctx.send(args)
-
-#bot.run("TOKEN_HERE")
+global activities, config, hs, wellness_check, send, send_report, send_wellness_check
 
 #*******************************************************************************************
 #   Functions
@@ -49,24 +37,19 @@ def addHeliumAddress(address):
     print("Entered")
     #Confirm address is alpha numeric
     #Concatenate address to json format
-    jsonStr = '{"hotspot": ' + address + ', "discord_webhook": "DISCORD WEBHOOK", "name": ""}'
+    jsonStr = '{"hotspot": ' + address + ', "discord_webhook": "https://discord.com/api/webhooks/936333349197316188/bb-1zuXa3p5cyImLKE8S1d8U0Cx36sdvv89smb2KcY_qcK67_Qf2h1MG3Ad61WAwclYK", "name": ""}'
     # Append-adds to the end of the config file
     file1 = open("config.json", "a")  # append mode
     file1.write(jsonStr)
     print("Wrote to config")
     file1.close()
-
-    return True
-
 #____________________________________________________________________________________________________________________________________________________
+
 
 #--------------------------------------------------------------------------------------------
 # Zees is ze main function
 #--------------------------------------------------------------------------------------------
-global activities, config, hs, wellness_check, send, send_report, send_wellness_check
-#TODO make this dynamic 
-addHeliumAddress('"11PNjHCMvASVN7oSNF2V6XM1QgfvpGx1AxkWF1VYoCC6s6ngxw5"')
-with open(config_file) as json_data_file:
+"""with open(config_file) as json_data_file:
         for jsonObj in json_data_file:
             #getting the next hotspot name to process
             config = json.loads(jsonObj)
@@ -95,6 +78,24 @@ with open(config_file) as json_data_file:
                 "block": hotspot_data["block"],
                 "reward_scale": "{:.2f}".format(round(hotspot_data["reward_scale"], 2)),
             }
-
+"""
             #sendDiscordMessage()
-            print(hs_add)
+            #print(hs_add)
+
+
+#***********************************************************************************************************
+#          BOT COMMANDS
+#***********************************************************************************************************
+@bot.command()
+async def add(ctx, args):
+    #TODO add code to check if the address already exists when trying to add a new one
+    #adds the helium hotspot miner address to config file
+    if not str(requests.get(helium_api_endpoint + "hotspots/" + args, headers=headers)) == "<Response [200]>":
+        print("The parameter is: " + args)
+        print(str(requests.get(helium_api_endpoint + "hotspots/" + args, headers=headers)))
+        await ctx.send("This hotspot address does not exist. Hotspot was NOT added.")
+    else:
+        addHeliumAddress(args)
+        await ctx.send("Your hotspot has been added. You can use the $status command to see your hotspot's status.")     
+
+bot.run("OTM2MzI4MTY0NzY5MTQwODM2.YfLljg.9GibXN-mUpYZjaONcVeVgIUOnxM")
