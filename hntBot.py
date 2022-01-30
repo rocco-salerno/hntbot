@@ -18,6 +18,12 @@ global activities, config, hs, wellness_check, send, send_report, send_wellness_
 #*******************************************************************************************
 #   Functions
 #*******************************************************************************************
+def getWebhook():
+    with open("webhook.txt") as f:
+        webhook = f.read().strip()
+        print("Read the webhook")
+        return webhook
+
 def nice_hotspot_name(name):
     return name.replace("-", " ").upper()
 
@@ -29,25 +35,32 @@ def nice_hotspot_initials(name):
 
 def sendDiscordMessage():
     messageContent = "This is just a test!"
-    webhook = DiscordWebhook(url="https://discord.com/api/webhooks/936333349197316188/bb-1zuXa3p5cyImLKE8S1d8U0Cx36sdvv89smb2KcY_qcK67_Qf2h1MG3Ad61WAwclYK", content=messageContent)
+
+    webhook = getWebhook()
     # send
     webhook_response = webhook.execute()
 
 def addHeliumAddress(address):
-    print("Entered")
+    print("Entered addHeliumAddress")
     #Confirm address is alpha numeric
+    if address is None:
+        return "Error: New address is null"
+
+    #Get discord server webhook
+    webhook = getWebhook()
+
     #Concatenate address to json format
-    jsonStr = '{"hotspot": ' + address + ', "discord_webhook": "https://discord.com/api/webhooks/936333349197316188/bb-1zuXa3p5cyImLKE8S1d8U0Cx36sdvv89smb2KcY_qcK67_Qf2h1MG3Ad61WAwclYK", "name": ""}'
-    # Append-adds to the end of the config file
-    file1 = open("config.json", "a")  # append mode
-    file1.write(jsonStr)
-    print("Wrote to config")
-    file1.close()
+    jsonStr = '{"hotspot":" ' + address + '", "discord_webhook": "' + webhook + '", "name": ""}'
+    # Add new address to the end of the config file
+    with open("config.json", "a") as config:  # append mode
+        config.write(jsonStr)
+        print("Wrote to config")
+
 #____________________________________________________________________________________________________________________________________________________
 
 
 #--------------------------------------------------------------------------------------------
-# Zees is ze main function
+# Zees is ze main functeen
 #--------------------------------------------------------------------------------------------
 """with open(config_file) as json_data_file:
         for jsonObj in json_data_file:
@@ -96,6 +109,6 @@ async def add(ctx, args):
         await ctx.send("This hotspot address does not exist. Hotspot was NOT added.")
     else:
         addHeliumAddress(args)
-        await ctx.send("Your hotspot has been added. You can use the $status command to see your hotspot's status.")     
+        await ctx.send("Your hotspot has been added. You can use the $status command to see your hotspot's status.")
 
-bot.run("OTM2MzI4MTY0NzY5MTQwODM2.YfLljg.9GibXN-mUpYZjaONcVeVgIUOnxM")
+bot.run("OTM2MzI4MTY0NzY5MTQwODM2.YfLljg.t4MBqh9X8iGV2ohS4oVJPgiuRjA")
