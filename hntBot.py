@@ -180,7 +180,7 @@ async def add(ctx, args):
 
 @bot.command()
 async def status(ctx):
-    foundHotspot = False
+    foundHotspot = True
     userID = str(ctx.author)
     messageToSend = ""
     i = 0
@@ -193,9 +193,12 @@ async def status(ctx):
                 hs_endpoint = helium_api_endpoint + "hotspots/" + config["hotspotArray"][i]["hotspot"]
                 await ctx.send(str(getAPIDataToMessage(hs_endpoint)))
             else:
+                foundHotspot = False
                 print("No hotspots found with that user ID")
                 await ctx.send("Sorry, I could not find your hotspot(s).")
             i = i+1
+            if foundHotspot == False:
+                break
 
 #sendDiscordMessage(getAllHotspots())
 bot.run(str(getToken()))
