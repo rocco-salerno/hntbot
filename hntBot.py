@@ -15,11 +15,30 @@ token = ""
 headers = {'User-Agent': str(uuid.uuid1())}
 
 bot = commands.Bot(command_prefix="$")
-global activities, config, hs, wellness_check, send, send_report, send_wellness_check
+global activities, config, hs, wellness_check, send, send_report, send_wellness_check, discordGroupMessage
 
 #*******************************************************************************************
 #   Functions
 #*******************************************************************************************
+def nice_hnt_amount_or_seconds(amt):
+    niceNum = 0.00000001
+    niceNumSmall = 100000000
+
+    if isinstance(amt, float):
+        # float. for time i
+        amt_output = "{:.2f}".format(amt)
+    else:
+        # int. up to 3 decimal payments
+        amt_output = "{:.3f}".format(amt * niceNum)
+
+    # int. 8 decimal places for micropayments
+    # if amt > 0 and amt < 100000 :
+    if amt in range(0, 100000):
+        amt_output = "{:.8f}".format(amt / niceNumSmall).rstrip("0")
+        amt_output = f"`{amt_output}`"
+
+    return str(amt_output)
+
 def getWebhook():
     openJson = open(webhook_file)
     data = json.load(openJson)
@@ -34,18 +53,24 @@ def getToken():
     print("The token is: " + token)
     return token
 
+def getStatusIcon(currStatus):
+    if str(currStatus) == "ONLINE":
+        statusIcon = "🟢"
+    else:
+        statusIcon = "🔴"
+    return statusIcon
+
 def nice_hotspot_name(name):
     return name.replace("-", " ").upper()
 
-def nice_hotspot_initials(name):
-    if not bool(config["initials"]):
-        name = nice_hotspot_name(name)
-        config["initials"] = "".join(item[0].upper() for item in name.split())
-    return config["initials"]
+#def nice_hotspot_initials(name):
+#    if not bool(config["initials"]):
+#        name = nice_hotspot_name(name)
+#        config["initials"] = "".join(item[0].upper() for item in name.split())
+#    return config["initials"]
 
-def sendDiscordMessage():
-    messageContent = "This is just a test!"
-    webhook = getWebhook()
+def sendDiscordMessage(messageConent):
+    webhook = DiscordWebhook(url=getWebhook(), content=messageConent)
     # send
     webhook_response = webhook.execute()
 
@@ -59,11 +84,29 @@ def addHeliumAddress(address):
     webhook = getWebhook()
 
     #Concatenate address to json format
-    jsonStr = '{"hotspot":" ' + address + '", "discord_webhook": "' + webhook + '", "name": ""}'
+    jsonStr = {"hotspot": address,
+                "discord_webhook": webhook,
+                "name": ""}
+                
+    write_json(jsonStr)
     # Add new address to the end of the config file
-    with open("config.json", "a") as config:  # append mode
-        config.write(jsonStr)
-        print("Wrote to config")
+    #with open("config.json", "a") as config:  # append mode
+    #    print("ATTEMPTING TO WRITE")
+    #    config["hotspotArray"].write(jsonStr)
+    #    print("Wrote to config")
+    #    config.close()
+
+# function to add to JSON
+def write_json(new_data, filename=config_file):
+    with open(filename,'r+') as file:
+          # First we load existing data into a dict.
+        file_data = json.load(file)
+        # Join new_data with file_data inside emp_details
+        file_data["hotspotArray"].append(new_data)
+        # Sets file's current position at offset.
+        file.seek(0)
+        # convert back to json.
+        json.dump(file_data, file, indent = 4)
 
 #____________________________________________________________________________________________________________________________________________________
 
@@ -72,26 +115,29 @@ def addHeliumAddress(address):
 # Zees is ze main functeen
 #--------------------------------------------------------------------------------------------
 def getAllHotspots():
+    discordMassMessage = ""
+    i=0
     with open(config_file) as json_data_file:
-        for jsonObj in json_data_file:
-            #getting the next hotspot name to process
-            config = json.loads(jsonObj)
-
+        config = json.load(json_data_file)
+        for index in config["hotspotArray"]:
+            print("index: " + str(i))
             # try to get json or return error
             status = ""
-            # LIVE API data
-            activity_endpoint = (
-                helium_api_endpoint + "hotspots/" + config["hotspot"] + "/activity/"
-            )
-            activity_request = requests.get(activity_endpoint, headers=headers)
+            #LIVE API data
+            #activity_endpoint = (
+            #    helium_api_endpoint + "hotspots/" + config["hotspot"] + "/activity/"
+            #)
+            #activity_request = requests.get(activity_endpoint, headers=headers)
 
             #getting the name, owner, status, reward scale from api
-            hs_endpoint = helium_api_endpoint + "hotspots/" + config["hotspot"]
+            print(helium_api_endpoint + "hotspots/" + config["hotspotArray"][i]["hotspot"])
+            hs_endpoint = helium_api_endpoint + "hotspots/" + config["hotspotArray"][i]["hotspot"]
             hs_request = requests.get(hs_endpoint, headers=headers)
             data = hs_request.json()
 
             hotspot_data = data["data"]
-
+            
+            #hotspot data
             hs_add = {
                 "owner": hotspot_data["owner"],
                 "name": nice_hotspot_name(hotspot_data['name']),
@@ -101,9 +147,24 @@ def getAllHotspots():
                 "block": hotspot_data["block"],
                 "reward_scale": "{:.2f}".format(round(hotspot_data["reward_scale"], 2)),
             }
-            #sendDiscordMessage()
-            #print(hs_add)
 
+            #getting the account balance
+            wallet_request = requests.get(helium_api_endpoint + "accounts/" + hs_add["owner"], headers=headers)
+            wallet = wallet_request.json()
+            balance = nice_hnt_amount_or_seconds(wallet["data"]["balance"])
+            
+            #print(getStatusIcon(hs_add["status"]))
+            discordGroupMessage = (
+                                    "📡**" + hs_add["name"] + "**📡\n"
+                                    + getStatusIcon(hs_add["status"]) + " " + hs_add["status"] + getStatusIcon(hs_add["status"]) + "\n"
+                                    + "⚖️  Reward Scale: " + hs_add["reward_scale"] + " ⚖️\n"
+                                    + "💰️ Wallet Balance: " + balance + " 💰️\n\n"
+                                )
+            #print(discordGroupMessage)
+            discordMassMessage = discordMassMessage + discordGroupMessage
+            i+=1
+            #print(hs_add)
+    return discordMassMessage
 
 #***********************************************************************************************************
 #          BOT COMMANDS
@@ -120,4 +181,6 @@ async def add(ctx, args):
         addHeliumAddress(args)
         await ctx.send("Your hotspot has been added. You can use the $status command to see your hotspot's status.")
 
+
+sendDiscordMessage(getAllHotspots())
 bot.run(str(getToken()))
