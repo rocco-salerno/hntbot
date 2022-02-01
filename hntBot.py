@@ -134,6 +134,19 @@ def getAPIDataToMessage(hs_endpoint):
                             + "💰️ Wallet Balance: " + balance + " 💰️\n\n"
                         )
     return discordGroupMessage
+
+def checkAddressExists(heliumAddress, uName, addrExist):
+    iter = 0
+    with open(config_file) as json_data_file:
+        config = json.load(json_data_file)
+        for index in config["hotspotArray"]:
+            if str(config["hotspotArray"][iter]["hotspot"]) == heliumAddress:
+                print("The helium address already exists")
+                uName = str(config["hotspotArray"][iter]["name"])
+                addrExist = True
+                break
+    print(str(addrExist) + " " + uName)
+    return addrExist, uName
 #____________________________________________________________________________________________________________________________________________________
 
 
@@ -166,11 +179,14 @@ def getAllHotspots():
 #***********************************************************************************************************
 @bot.command()
 async def add(ctx, args):
-    #TODO add code to check if the address already exists when trying to add a new one
-    
+    addressExists = False
+    userName = ""
     print("YOUR ID: " + str(ctx.author))
     #adds the helium hotspot miner address to config file
-    if not str(requests.get(helium_api_endpoint + "hotspots/" + args, headers=headers)) == "<Response [200]>":
+    result = checkAddressExists(args, userName, addressExists)
+    if result[0]:
+        await ctx.send("That hotspot address was already added by: " + result[1])
+    elif not str(requests.get(helium_api_endpoint + "hotspots/" + args, headers=headers)) == "<Response [200]>":
         print("The parameter is: " + args)
         print(str(requests.get(helium_api_endpoint + "hotspots/" + args, headers=headers)))
         await ctx.send("This hotspot address does not exist. Hotspot was NOT added.")
@@ -180,7 +196,7 @@ async def add(ctx, args):
 
 @bot.command()
 async def status(ctx):
-    foundHotspot = True
+    foundHotspot = False
     userID = str(ctx.author)
     messageToSend = ""
     i = 0
@@ -188,17 +204,15 @@ async def status(ctx):
         config = json.load(json_data_file)
         for index in config["hotspotArray"]:
             if str(config["hotspotArray"][i]["name"]) == userID:
+                foundHotspot = True
                 print("Found a hotspot for user")
                 #getting the name, owner, status, reward scale from api
                 hs_endpoint = helium_api_endpoint + "hotspots/" + config["hotspotArray"][i]["hotspot"]
                 await ctx.send(str(getAPIDataToMessage(hs_endpoint)))
-            else:
-                foundHotspot = False
-                print("No hotspots found with that user ID")
-                await ctx.send("Sorry, I could not find your hotspot(s).")
             i = i+1
-            if foundHotspot == False:
-                break
+        if not foundHotspot:
+            print("No hotspots found with that user ID")
+            await ctx.send("Sorry, I could not find your hotspot(s).")
 
 #sendDiscordMessage(getAllHotspots())
 bot.run(str(getToken()))
