@@ -2,9 +2,11 @@ from email import message
 import json
 import requests
 import uuid
-import discord
-from discord.ext import commands
+import discord, random, asyncio
+from discord.ext import commands, tasks
 from discord_webhook import DiscordWebhook
+from pycoingecko import CoinGeckoAPI
+
 
 helium_api_endpoint = "https://api.helium.io/v1/"
 helium_explorer_tx = "https://explorer.helium.com/txns/"
@@ -15,8 +17,8 @@ token = ""
 client =discord.Client()
 # Generate a UUID from a host ID, sequence number, and the current time
 headers = {'User-Agent': str(uuid.uuid1())}
-
 bot = commands.Bot(command_prefix="$")
+
 global activities, config, hs, wellness_check, send, send_report, send_wellness_check, discordGroupMessage
 
 #*******************************************************************************************
@@ -120,7 +122,7 @@ def getAPIDataToMessage(hs_endpoint):
         "block": hotspot_data["block"],
         "reward_scale": "{:.2f}".format(round(hotspot_data["reward_scale"], 2)),
     }
-
+    
     #getting the account balance
     wallet_request = requests.get(helium_api_endpoint + "accounts/" + hs_add["owner"], headers=headers)
     wallet = wallet_request.json()
@@ -214,5 +216,27 @@ async def status(ctx):
             print("No hotspots found with that user ID")
             await ctx.send("Sorry, I could not find your hotspot(s).")
 
+
+#bot sends alerts +- 5% coin price
+@tasks.loop(seconds=15.0)
+async def getAlert():
+    cg = CoinGeckoAPI()
+    hntUpdate = cg.get_price(ids='helium', vs_currencies='usd', include_24hr_change=True)
+    if str(hntUpdate["helium"]["usd_24h_change"]) >= str(5):
+        print("HNT TO THE MOON!")
+    elif str(hntUpdate["helium"]["usd_24h_change"]) <= str(1):
+        print("HNT TO THE FLOOR")
+    channel = client.get_channel(829753191552909312)
+    print(str(on_ready()))
+    print("Testing ALERT")
+    await channel.send("TESTING")
+
+@client.event
+async def on_ready():
+    getAlert.start()
+    #channel = client.get_channel(829753191552909312)
+    #print(channel)
+
 #sendDiscordMessage(getAllHotspots())
+on_ready()
 bot.run(str(getToken()))
