@@ -1,0 +1,12 @@
+COINBASE:
+API Key: ToJRr5GvORagJds2
+
+API Secret: 8SpNGtmDzRd7I5yPeGJ2YZT02KU7K3oe
+
+OTH2
+Client ID: e195808de6032035ecfe59481b0717b33d9acb103b5cd07d47c61d12ec8ced11
+
+
+SECRET: ad6499f93bdce329ee9dda81c47f28dcff880840f86e26aa95b7e7c9f2685e82
+
+https://www.coinbase.com/oauth/authorize?client_id=e195808de6032035ecfe59481b0717b33d9acb103b5cd07d47c61d12ec8ced11&redirect_uri=https%3A%2F%2Fdiscord.gg&response_type=code&scope=wallet%3Auser%3Aread

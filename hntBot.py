@@ -196,6 +196,7 @@ async def add(ctx, args):
         addHeliumAddress(args, str(ctx.author))
         await ctx.send("Your hotspot has been added. You can use the $status command to see your hotspot's status.")
 
+# status of all the users hotspots
 @bot.command()
 async def status(ctx):
     foundHotspot = False
@@ -218,25 +219,32 @@ async def status(ctx):
 
 
 #bot sends alerts +- 5% coin price
-@tasks.loop(seconds=15.0)
+@tasks.loop(hours=24.0)
 async def getAlert():
     cg = CoinGeckoAPI()
+    messageToSend = ""
     hntUpdate = cg.get_price(ids='helium', vs_currencies='usd', include_24hr_change=True)
-    if str(hntUpdate["helium"]["usd_24h_change"]) >= str(5):
-        print("HNT TO THE MOON!")
-    elif str(hntUpdate["helium"]["usd_24h_change"]) <= str(1):
-        print("HNT TO THE FLOOR")
-    channel = client.get_channel(829753191552909312)
-    print(str(on_ready()))
-    print("Testing ALERT")
-    await channel.send("TESTING")
+    percChange = "{:.2f}".format(hntUpdate["helium"]["usd_24h_change"])
+    if float(str(percChange)) >= 5:
+        messageToSend = ("⬆️ HNT has gone up " + str(percChange) + "% ⬆️\n"
+                        + "The current price of HNT is: $" + str(hntUpdate["helium"]["usd"]))
+    elif float(str(percChange)) <= -5:
+        messageToSend = ("⬇️ HNT has gone down " + str(percChange) + "% ⬇️ \n" 
+                        + "The current price of HNT is: $" + str(hntUpdate["helium"]["usd"]))
+    guild = bot.get_guild(341747768810799105)
+    channel = guild.get_channel(936713741041549333)
+    await channel.send(messageToSend)
 
-@client.event
+# get current price of HNT in US dollars
+@bot.command()
+async def price(ctx):
+    cg = CoinGeckoAPI()
+    hntUpdate = cg.get_price(ids='helium', vs_currencies='usd', include_24hr_change=True)
+    await ctx.send("The current price of Helium in USD is $" + str(hntUpdate["helium"]["usd"]))
+
+@bot.event
 async def on_ready():
     getAlert.start()
-    #channel = client.get_channel(829753191552909312)
-    #print(channel)
 
 #sendDiscordMessage(getAllHotspots())
-on_ready()
 bot.run(str(getToken()))
