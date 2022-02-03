@@ -233,7 +233,10 @@ async def getAlert():
                         + "The current price of HNT is: $" + str(hntUpdate["helium"]["usd"]))
     guild = bot.get_guild(341747768810799105)
     channel = guild.get_channel(936713741041549333)
-    await channel.send(messageToSend)
+    if not messageToSend == "":
+        await channel.send(messageToSend)
+    else:
+        print("The 24h change is: " + (str(percChange)))
 
 # get current price of HNT in US dollars
 @bot.command()
